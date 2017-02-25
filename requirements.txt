@@ -2,3 +2,4 @@ django
 numpy
 dj_database_url
 django-bootstrap-form
+psycopg2
