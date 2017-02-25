@@ -17,10 +17,13 @@ def rankings(request):
         for rating in ratings:
             if rating.passed:
                 continue
-            rating_sum += [float(rating.standardized_originality),
-                           float(rating.standardized_usefulness),
-                           float(rating.standardized_technical_difficulty),
-                           float(rating.standardized_polish)]
+            try:
+                rating_sum += [float(rating.standardized_originality),
+                               float(rating.standardized_usefulness),
+                               float(rating.standardized_technical_difficulty),
+                               float(rating.standardized_polish)]
+            except TypeError:
+                continue
             count += 1
         rating_sum /= count
         project_info.append([project.name] + list(rating_sum) +
