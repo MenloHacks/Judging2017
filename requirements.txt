@@ -1,4 +1,4 @@
 django
 numpy
 dj_database_url
-bootstrapform
+django-bootstrap-form
