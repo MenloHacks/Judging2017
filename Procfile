@@ -1,0 +1,1 @@
+web: gunicorn Judging.wsgi --log-file -
