@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block content %}
+    {% csrf_token %}
+    <h1 class="text-center">
+        Overview
+    </h1>
+    <div class="row">
+        <div class="col-md-offset-1 col-md-10">
+            <table class="table table-responsive table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>Project Name</th><th>Originality</th>
+                        <th>Usefulness</th><th>Technical Difficulty</th>
+                        <th>Polish</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for project in ratings %}
+                        <tr class="clickable" data-href="{{project.0}}">
+                            {% for rating in project.1 %}
+                            <td>{{ rating }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-offset-10 col-md-2">
+            <button id="submit-ratings" type="submit" class="btn btn-primary">
+                Submit</button>
+        </div>
+    </div>
+
+<script>
+$(function() {
+    // This lets you click on the table rows.
+    $(".clickable").click(function() {
+        console.log("test");
+        window.location = "/project/" + $(this).data("href") + "/";
+    });
+    $("#submit-ratings").click(function() {
+        var valid = true;
+        $("td").each(function() {
+            if (this.text == "Not Yet Rated")
+            {
+                alert("You must rate or pass every project.");
+                valid = false;
+            }
+        });
+        if (!valid) {
+            return;
+        }
+        $.ajaxSetup({
+            headers: { "X-CSRFToken":  $("input[name='csrfmiddlewaretoken']").attr("value")}
+        });
+        $.post(".", {submitted: true}, function() {
+                window.location = "/complete";
+        });
+    })
+});
+</script>
+{% endblock %}

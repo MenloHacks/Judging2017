@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load bootstrap %}
+{% block content %}
+    <style>
+    .btn {
+        margin:0 auto;
+        display:block;
+    }
+    </style>
+    <div class="row">
+        <div class="col-md-offset-1 col-md-10">
+            <h1 class="text-center">{{ project_name }}
+                {% if passed %}
+                (Passed)
+                {% endif %}
+            </h1>
+            <form role="form" id="rating-form">
+            {% csrf_token %}
+            {{ rating_form | bootstrap }}
+            </form>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3">
+            <button id="previous" type="submit" class="btn btn-primary">
+                Previous</button>
+        </div>
+        <div class="col-md-3">
+            <button id="overview" type="submit" class="btn btn-primary">
+                Overview</button>
+        </div>
+        <div class="col-md-3">
+            <button id="pass" type="submit" class="btn btn-primary">
+                Pass</button>
+        </div>
+        <div class="col-md-3">
+            <button id="next" type="submit" class="btn btn-primary">
+                Next</button>
+        </div>
+    </div>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.16.0/jquery.validate.min.js"></script>
+<script>
+$(function() {
+
+    /*
+    Validation. Makes sure that every score is an integer between 1 and 10.
+    Uses the jquery validate plugin.
+     */
+    var form = $("#rating-form");
+    $.validator.addMethod("INT", function (value, element) {
+        return /^(10|[0-9])$/i.test(value);
+    }, "Please enter a valid score between 1 and 10");
+    var validator = form.validate({
+        rules: {
+            originality: "required INT",
+            usefulness: "required INT",
+            technical_difficulty: "required INT",
+            polish: "required INT"
+        }
+    });
+
+    /*
+    Buttons.
+     */
+    $("#next").click(function(e) {
+        e.preventDefault();
+        var formData;
+        {% if passed %}
+            $.ajaxSetup({
+                headers: { "X-CSRFToken":  $("input[name='csrfmiddlewaretoken']").attr("value")}
+            });
+            formData = form.serializeArray();
+        {% else %}
+            formData = getdata();
+        {% endif %}
+        $.post(".", formData, function() {
+            window.location = "/project/" + ({{ project_id }} + 1);
+        });
+    });
+
+    $("#previous").click(function(e) {
+        e.preventDefault();
+        var formData = getdata();
+        $.post(".", formData, function() {
+            window.location = "/project/" + ({{ project_id }} - 1);
+        });
+    });
+
+    $("#pass").click(function(e) {
+        e.preventDefault();
+        $.ajaxSetup({
+            headers: { "X-CSRFToken":  $("input[name='csrfmiddlewaretoken']").attr("value")}
+        });
+        var formData = {passed: true};
+        $.post(".", formData, function() {
+            location.reload();
+        });
+    });
+
+    $("#overview").click(function(e) {
+        e.preventDefault();
+        $.ajaxSetup({
+            headers: { "X-CSRFToken":  $("input[name='csrfmiddlewaretoken']").attr("value")}
+        });
+        var formData = form.serializeArray();
+        $.post(".", formData, function() {
+                window.location = "/";
+        });
+    });
+
+    /*
+    Function to validate and get form data for the next and previous buttons.
+     */
+    function getdata() {
+        if (! form.valid()) {
+            validator.showErrors();
+            return;
+        }
+        $.ajaxSetup({
+            headers: { "X-CSRFToken":  $("input[name='csrfmiddlewaretoken']").attr("value")}
+        });
+        return form.serializeArray();
+    }
+
+});
+</script>
+{% endblock %}

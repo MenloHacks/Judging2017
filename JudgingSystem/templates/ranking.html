@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+    {% csrf_token %}
+    <h1 class="text-center">
+        Results
+    </h1>
+    <div class="row">
+        <div class="col-md-offset-1 col-md-10">
+            <table class="table table-responsive table-bordered table-hover
+            sortable-theme-bootstrap" data-sortable>
+                <thead>
+                    <tr>
+                        <th>Project Name</th><th>Originality</th>
+                        <th>Usefulness</th><th>Technical Difficulty</th>
+                        <th>Polish</th><th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for project in ratings %}
+                        <tr>
+                        {% for rating in project %}
+                        <td>{{ rating }}</td>
+                        {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sortable/0.8.0/css/sortable-theme-bootstrap.min.css" integrity="sha256-S9t86HqhPL8nNR85dIjDQCJMPd9RULmRAub6xBksk9M=" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sortable/0.8.0/js/sortable.min.js" integrity="sha256-gCtdA1cLK2EhQZCMhhvGzUsWM/fsxtJ2IImUJ+4UOP8=" crossorigin="anonymous"></script>
+
+<script>
+$(function() {
+
+});
+</script>
+{% endblock %}
