@@ -1,26 +1,8 @@
-from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.views.generic import View
-from django.core import serializers
-from django.conf import settings
-from datetime import datetime
-from django.contrib.auth.decorators import login_required
-from registration.backends.hmac.views import RegistrationView
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
-import os
-from django.contrib.auth.views import login
-from registration.backends.hmac.views import ActivationView
-import json
-import csv
-from django.forms.models import model_to_dict
-from copy import copy
 import models
 import forms
 import numpy as np
-from django.views.decorators.csrf import csrf_protect
-
 
 def complete(request):
     return render(request, "complete.html")
