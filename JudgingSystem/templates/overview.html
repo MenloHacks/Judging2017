@@ -41,26 +41,17 @@ $(function() {
     });
     $("#submit-ratings").click(function(e) {
         e.preventDefault();
-        var valid = true;
-        $("td").each(function() {
-            if ($(this).text() == "Not yet rated")
-            {
-                alert("You must rate or pass every project.");
-                valid = false;
-                return false;
-            }
+        var valid = confirm("Submitting will finalize your scores. Are you " +
+            "sure you want to submit?");
+        if (!valid) {
+            return;
+        }
+        $.ajaxSetup({
+            headers: { "X-CSRFToken":  $("input[name='csrfmiddlewaretoken']").attr("value")}
         });
-        setTimeout(function() {
-            if (!valid) {
-                return;
-            }
-            $.ajaxSetup({
-                headers: { "X-CSRFToken":  $("input[name='csrfmiddlewaretoken']").attr("value")}
-            });
-            $.post(".", {submitted: true}, function() {
-                    window.location = "/complete";
-            });
-        }, 100000)
+        $.post(".", {submitted: true}, function() {
+                window.location = "/complete";
+        });
     })
 });
 </script>

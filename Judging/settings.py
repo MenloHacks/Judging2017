@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'JudgingSystem',
-    'bootstrapform'
+    'bootstrapform',
+    'lockdown'
 ]
 
 MIDDLEWARE = [
@@ -48,7 +49,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'lockdown.middleware.LockdownMiddleware'
+
 ]
+LOCKDOWN_PASSWORDS = (os.environ["password"], )
+
+LOCKDOWN_FORM = 'lockdown.forms.LockdownForm'
 
 ROOT_URLCONF = 'Judging.urls'
 
@@ -82,7 +88,7 @@ DATABASES = {
     }
 }
 
-# heroku settings
+#heroku settings
 import dj_database_url
 DATABASES = {}
 DATABASES['default'] = dj_database_url.config()

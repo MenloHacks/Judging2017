@@ -3,6 +3,9 @@ from django.views.generic import View
 import models
 import forms
 import numpy as np
+from django.contrib.sessions.models import Session
+from django.http import HttpResponse
+
 
 def complete(request):
     return render(request, "complete.html")
@@ -12,24 +15,84 @@ def rankings(request):
     project_info = []
     for project in models.Project.objects.all():
         ratings = models.Rating.objects.filter(project_id=project.id)
-        count = 0
+        count = [0.,0.,0.,0.]
         rating_sum = np.array([0., 0., 0., 0.])
         for rating in ratings:
             if rating.passed:
                 continue
             try:
-                rating_sum += [float(rating.standardized_originality),
-                               float(rating.standardized_usefulness),
-                               float(rating.standardized_technical_difficulty),
-                               float(rating.standardized_polish)]
-            except TypeError:
-                continue
-            count += 1
+                so = float(rating.standardized_originality)
+                count[0] += 1
+            except:
+                so = 0
+
+            try:
+                su = float(rating.standardized_usefulness)
+                count[1] += 1
+            except:
+                su = 0
+
+            try:
+                std = float(rating.standardized_technical_difficulty) #everyone's
+                # favorite variable
+                count[2] += 1
+            except:
+                std = 0
+
+            try:
+                sp = float(rating.standardized_polish)
+                count[3] += 1
+            except:
+                sp = 0
+
+            rating_sum += [so, su, std, sp]
         rating_sum /= count
         project_info.append([project.name] + list(rating_sum) +
                             [np.mean(rating_sum)])
     return render(request, "ranking.html", context={"ratings": project_info})
 
+
+def submit_all(request):
+    judges = Session.objects.all()
+    for judge in judges:
+        finalize_scores(judge.session_key)
+    return HttpResponse("submitted all")
+
+
+def finalize_scores(judge_id):
+    ratings = models.Rating.objects.filter(
+        judge_id=judge_id).exclude(passed=True)
+
+    rating_array = []
+    for rating in ratings:
+        rating_array.append([rating.originality, rating.usefulness,
+                             rating.technical_difficulty,
+                             rating.polish])
+
+    rating_array = np.array(rating_array)
+    coefficients = [[], []]
+    for column in rating_array.T:  # find the mean and std multiplier
+        # for each column
+        coefficients[0].append(np.mean(column))
+        coefficients[1].append(3 / np.std(column))
+
+    for rating in ratings:  # find the standardized ratings
+        rating.standardized_originality = \
+            (rating.originality - coefficients[0][0]) * \
+            coefficients[1][0] + 5
+
+        rating.standardized_usefulness = \
+            (rating.usefulness - coefficients[0][1]) * \
+            coefficients[1][1] + 5
+
+        rating.standardized_technical_difficulty = \
+            (rating.technical_difficulty - coefficients[0][2]) * \
+            coefficients[1][2] + 5
+
+        rating.standardized_polish = \
+            (rating.polish - coefficients[0][3]) * \
+            coefficients[1][3] + 5
+        rating.save()
 
 
 
@@ -37,8 +100,11 @@ class Overview(View):
 
     def get(self, request):
         session_key = request.session.session_key
-        if not session_key:  # User doesn't have a session
-            request.session.save()  # Create new session
+        try:
+            Session.objects.get(session_key=session_key)
+        except Session.DoesNotExist:
+            request.session.flush()
+            request.session.save()
             session_key = request.session.session_key
         ratings = []
         for project in models.Project.objects.all():
@@ -70,39 +136,7 @@ class Overview(View):
         if request.POST.get("submitted"):  # should always be true with this
                 # version
             judge_id = request.session.session_key
-            ratings = models.Rating.objects.filter(
-                judge_id=judge_id).exclude(passed=True)
-
-            rating_array = []
-            for rating in ratings:
-                rating_array.append([rating.originality, rating.usefulness,
-                                     rating.technical_difficulty,
-                                     rating.polish])
-
-            rating_array = np.array(rating_array)
-            coefficients = [[],[]]
-            for column in rating_array.T: #find the mean and std multiplier
-                # for each column
-                coefficients[0].append(np.mean(column))
-                coefficients[1].append(3/np.std(column))
-
-            for rating in ratings: #find the standardized ratings
-                rating.standardized_originality = \
-                    (rating.originality-coefficients[0][0]) * \
-                    coefficients[1][0] + 5
-
-                rating.standardized_usefulness = \
-                    (rating.usefulness - coefficients[0][1]) * \
-                    coefficients[1][1] + 5
-
-                rating.standardized_technical_difficulty = \
-                    (rating.technical_difficulty - coefficients[0][2]) * \
-                    coefficients[1][2] + 5
-
-                rating.standardized_polish = \
-                    (rating.polish - coefficients[0][3]) * \
-                    coefficients[1][3] + 5
-                rating.save()
+            finalize_scores(judge_id)
         return complete(request)
 
 

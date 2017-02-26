@@ -22,5 +22,6 @@ urlpatterns = [
     url(r'^$', views.Overview.as_view()),
     url(r'^project/([0-9]+)/$', views.RatingView.as_view()),
     url(r'^complete/$', views.complete),
-    url(r'^ranking/$', views.rankings)
+    url(r'^ranking/$', views.rankings),
+    url(r'^submit_all/$', views.submit_all),
 ]
